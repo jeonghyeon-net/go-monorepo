@@ -101,7 +101,7 @@ jobs:
         run: NO_MISE=1 make build
 
   test-coverage:
-    name: Test Coverage
+    name: Test (coverage)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
