@@ -32,7 +32,7 @@ test:
 # go.work에 등록된 모든 모듈에 golangci-lint와 nilaway를 실행한다.
 lint:
 	@awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work | while read dir; do \
-		cd $(CURDIR)/$$dir && golangci-lint run --fix ./... && nilaway ./...; \
+		echo "=== $$dir ===" && cd $(CURDIR)/$$dir && golangci-lint run --fix ./... && nilaway ./...; \
 	done
 
 # go.work에 등록된 모든 모듈의 코드를 포맷한다.
