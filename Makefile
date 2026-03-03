@@ -14,7 +14,7 @@
 
 # mise가 관리하는 도구(golangci-lint, nilaway 등)의 PATH를 보장한다.
 ifeq ($(NO_MISE),1)
-SHELL := /bin/sh
+SHELL := /bin/bash
 else
 SHELL := mise exec -- bash
 endif
