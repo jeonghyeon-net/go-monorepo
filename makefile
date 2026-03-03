@@ -55,7 +55,6 @@ test-coverage:
 	@svcs="$(if $(SVC),$(SVC),$$(awk '/^[[:space:]]*\.\/svc\//{gsub(/^[[:space:]]+\.\/svc\//,""); print}' go.work))"; \
 	for svc in $$svcs; do \
 		if [ ! -d "$(CURDIR)/svc/$$svc/internal" ]; then \
-			echo "=== $$svc === (internal 패키지 없음, 스킵)"; \
 			continue; \
 		fi; \
 		echo "=== $$svc ==="; \
