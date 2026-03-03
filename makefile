@@ -59,17 +59,20 @@ test-coverage:
 		fi; \
 		echo "=== $$svc ==="; \
 		(cd $(CURDIR)/svc/$$svc && \
+			trap 'rm -f coverage.out' EXIT && \
 			go test -coverprofile=coverage.out ./internal/... 2>&1 | grep -v '\[no test files\]'; \
 			test $${PIPESTATUS[0]} -eq 0 && \
+			if [ ! -f coverage.out ]; then \
+				echo "❌ internal 패키지에 테스트 파일이 없습니다." && \
+				exit 1; \
+			fi && \
 			total=$$(go tool cover -func=coverage.out | grep '^total:' | awk '{print $$3}') && \
 			echo "커버리지: $$total" && \
 			if [ "$$total" != "100.0%" ]; then \
 				echo "❌ 커버리지가 100%에 미달합니다." && \
 				go tool cover -func=coverage.out | grep -v '100.0%' | grep -v '^total:' && \
-				rm -f coverage.out && \
 				exit 1; \
-			fi && \
-			rm -f coverage.out \
+			fi \
 		) || exit 1; \
 	done
 
