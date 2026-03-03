@@ -15,11 +15,12 @@ case "$COMMAND" in
   *gofumpt*)       deny "gofumpt" "make fmt" ;;
   *gofmt*)         deny "gofmt" "make fmt" ;;
   *nilaway*)       deny "nilaway" "make lint" ;;
-  "go build"*|*" go build"*)       deny "go build" "make build" ;;
-  "go test"*|*" go test"*)         deny "go test" "make test" ;;
-  "go fmt"*|*" go fmt"*)           deny "go fmt" "make fmt" ;;
-  "docker buildx"*|*" docker buildx"*) deny "docker buildx" "make docker-build" ;;
-  "docker build"*|*" docker build"*)   deny "docker build" "make docker-build" ;;
+  *"go build"*)  deny "go build" "make build" ;;
+  *"go test"*)   deny "go test" "make test" ;;
+  *"go run"*)    deny "go run" "make dev" ;;
+  *"go fmt"*)    deny "go fmt" "make fmt" ;;
+  *"docker buildx"*) deny "docker buildx" "make docker-build" ;;
+  *"docker build"*)  deny "docker build" "make docker-build" ;;
 esac
 
 echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}'
