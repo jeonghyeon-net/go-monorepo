@@ -22,6 +22,8 @@
 # --diff-filter=ACM: Added(추가), Copied(복사), Modified(수정)된 파일만 (삭제된 파일 제외)
 STAGED_GO_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$')
 
+echo "🔍 [1/2] 코드 포맷 수정 중... (make fmt)"
+
 make fmt
 if [ $? -ne 0 ]; then
     echo ""
@@ -35,9 +37,12 @@ if [ -n "$STAGED_GO_FILES" ]; then
     echo "$STAGED_GO_FILES" | xargs git add
 fi
 
+echo "✅ [1/2] 코드 포맷 통과"
+
 # --- 2단계: make lint (정적 분석) ---
 # golangci-lint + nilaway를 실행하여 코드 품질을 검사한다.
 # 린트 이슈가 발견되면 커밋이 차단된다.
+echo "🔍 [2/2] 린트 검사 중... (make lint)"
 
 make lint
 if [ $? -ne 0 ]; then
@@ -47,6 +52,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+echo "✅ [2/2] 린트 검사 통과"
 echo ""
 echo "✅ 모든 검사 통과! 커밋을 진행합니다."
 exit 0
