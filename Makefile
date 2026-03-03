@@ -33,10 +33,10 @@ build:
 					svc=$${dir#./svc/}; \
 					if [ ! -d "$(CURDIR)/$$dir/cmd" ]; then echo "$$dir/cmd 디렉터리를 찾을 수 없습니다."; exit 1; fi; \
 					mkdir -p $(CURDIR)/bin; \
-					cd $(CURDIR)/$$dir && CGO_ENABLED=0 go build -trimpath -buildvcs=false -mod=readonly -tags timetzdata -ldflags="-s -w" -o $(CURDIR)/bin/$$svc ./cmd/ \
+					(cd $(CURDIR)/$$dir && CGO_ENABLED=0 go build -trimpath -buildvcs=false -mod=readonly -tags timetzdata -ldflags="-s -w" -o $(CURDIR)/bin/$$svc ./cmd/) || exit 1 \
 				;; \
 				*) \
-					cd $(CURDIR)/$$dir && go build ./... \
+					(cd $(CURDIR)/$$dir && go build ./...) || exit 1 \
 			;; \
 		esac; \
 	done
@@ -45,21 +45,21 @@ build:
 test:
 	@dirs="$(if $(SVC),./svc/$(SVC),$$(awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work))"; \
 	for dir in $$dirs; do \
-			echo "=== $$dir ===" && cd $(CURDIR)/$$dir && go test ./... 2>&1 | grep -v '\[no test files\]'; test $${PIPESTATUS[0]} -eq 0; \
+			echo "=== $$dir ===" && (cd $(CURDIR)/$$dir && go test ./... 2>&1 | grep -v '\[no test files\]'; test $${PIPESTATUS[0]} -eq 0) || exit 1; \
 	done
 
 # go.work에 등록된 모든 모듈에 golangci-lint와 nilaway를 실행한다.
 lint:
 	@dirs="$(if $(SVC),./svc/$(SVC),$$(awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work))"; \
 	for dir in $$dirs; do \
-			echo "=== $$dir ===" && cd $(CURDIR)/$$dir && golangci-lint run --fix ./... && nilaway ./...; \
+			echo "=== $$dir ===" && (cd $(CURDIR)/$$dir && golangci-lint run -c $(CURDIR)/.golangci.yml --fix ./... && nilaway ./...) || exit 1; \
 	done
 
 # go.work에 등록된 모든 모듈의 코드를 포맷한다.
 fmt:
 	@dirs="$(if $(SVC),./svc/$(SVC),$$(awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work))"; \
 	for dir in $$dirs; do \
-			cd $(CURDIR)/$$dir && gofmt -w . && golangci-lint fmt; \
+			(cd $(CURDIR)/$$dir && gofmt -w . && golangci-lint fmt -c $(CURDIR)/.golangci.yml) || exit 1; \
 	done
 
 # air로 서비스를 핫리로드 실행한다.
@@ -82,7 +82,7 @@ docker-build:
 			-f dockerfile \
 			--build-arg SERVICE=$$service \
 			-t $(IMAGE_PREFIX)/$$service:$(IMAGE_TAG) \
-			.; \
+			. || exit 1; \
 	done
 
 # ── 프로젝트 초기 설정 ────────────────────────────────────────────────────────

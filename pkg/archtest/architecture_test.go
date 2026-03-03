@@ -12,6 +12,8 @@ import (
 )
 
 func TestWorkspaceArchitecture(t *testing.T) {
+	t.Parallel()
+
 	_, file, _, _ := runtime.Caller(0)
 	repoRoot := filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
 	goWorkPath := filepath.Join(repoRoot, "go.work")
@@ -31,8 +33,12 @@ func TestWorkspaceArchitecture(t *testing.T) {
 		}
 
 		modulePath := strings.TrimPrefix(line, "./")
-		serviceRoot := filepath.Join(repoRoot, modulePath)
-		if _, err := os.Stat(filepath.Join(serviceRoot, "go.mod")); err != nil {
+		serviceRoot := filepath.Clean(filepath.Join(repoRoot, modulePath))
+		if !strings.HasPrefix(serviceRoot, repoRoot) {
+			t.Fatalf("service module path escapes repo root: %s", modulePath)
+		}
+		goModPath := filepath.Join(serviceRoot, "go.mod")
+		if _, err := os.Stat(goModPath); err != nil {
 			t.Fatalf("go.mod not found for workspace service module %q: %v", modulePath, err)
 		}
 

@@ -540,6 +540,14 @@ linters:
           - funlen
         path: "_test\\.go$"
 
+      # gosec G703: 테스트 코드에서 동적 경로 구성은 불가피하다.
+      # go.work 파싱 등으로 경로를 조합하는 패턴이 taint analysis에 잡히지만,
+      # 테스트 환경에서는 path traversal 공격 시나리오가 아니다.
+      - linters:
+          - gosec
+        path: "_test\\.go$"
+        text: "G703"
+
 issues:
   # 린터당 이슈 수 제한을 없앤다. 모든 이슈를 빠짐없이 보여준다.
   # 기본값은 50개인데, 50개를 넘기면 나머지가 숨겨져 문제를 놓칠 수 있다.
@@ -559,8 +567,8 @@ formatters:
     - gci
 
   settings:
-    # gofumpt: Go Workspace에서는 golangci-lint가 각 모듈의 go.mod에서 모듈 경로를 자동 감지한다.
-    # module-path를 명시할 필요가 없다.
+    gofumpt:
+      module-path: go-monorepo
 
     gci:
       # import 문을 3그룹으로 나누어 빈 줄로 구분한다.
