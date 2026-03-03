@@ -35,7 +35,7 @@ jobs:
         run: NO_MISE=1 make lint
 
   test:
-    name: Test
+    name: Test (unit)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
