@@ -1,4 +1,5 @@
 - `make <build|test|lint|fmt|dev> [SVC=hello]` — SVC 생략 시 전체 대상
+- `make test-e2e [SVC=hello]` — e2e 테스트 실행
 - `make test-coverage [SVC=hello]` — internal 패키지 테스트 커버리지 100% 검증
 - `make docker-build [SVC=hello] [PLATFORM=linux/arm64]` — 컨테이너 이미지 빌드
 - 모듈 추가 시 go.work만 수정하면 Makefile에 자동 반영

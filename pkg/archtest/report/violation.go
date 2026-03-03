@@ -66,12 +66,6 @@ func Summary(violations []Violation) string {
 	for rule, count := range byRule {
 		fmt.Fprintf(&builder, "  %s: %d violation(s)\n", rule, count)
 	}
-	fmt.Fprintln(&builder)
-
-	for _, v := range violations {
-		fmt.Fprintln(&builder, v.String())
-		fmt.Fprintln(&builder)
-	}
 
 	return builder.String()
 }
