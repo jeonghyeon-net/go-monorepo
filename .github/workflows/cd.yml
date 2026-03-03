@@ -18,6 +18,10 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Build Docker images
-        run: make docker-build PLATFORM=linux/amd64
+        run: >-
+          make docker-build
+          PLATFORM=linux/amd64
+          CACHE_FROM=type=gha
+          CACHE_TO=type=gha,mode=max
         env:
           NO_MISE: 1

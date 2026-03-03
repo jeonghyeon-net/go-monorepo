@@ -79,6 +79,8 @@ docker-build:
 		echo "=== $$service ==="; \
 		docker buildx build \
 			--platform $(if $(PLATFORM),$(PLATFORM),linux/arm64) \
+			$(if $(CACHE_FROM),--cache-from $(CACHE_FROM),) \
+			$(if $(CACHE_TO),--cache-to $(CACHE_TO),) \
 			-f dockerfile \
 			--build-arg SERVICE=$$service \
 			-t $(IMAGE_PREFIX)/$$service:$(IMAGE_TAG) \
