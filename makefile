@@ -46,7 +46,7 @@ build:
 test:
 	@dirs="$(if $(SVC),./svc/$(SVC),$$(awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work))"; \
 	for dir in $$dirs; do \
-			echo "=== $$dir ===" && (cd $(CURDIR)/$$dir && go test ./... 2>&1 | grep -v '\[no test files\]'; test $${PIPESTATUS[0]} -eq 0) || exit 1; \
+			echo "=== $$dir ===" && (cd $(CURDIR)/$$dir && go test -tags unit ./... 2>&1 | grep -v '\[no test files\]'; test $${PIPESTATUS[0]} -eq 0) || exit 1; \
 	done
 
 # svc/*/internal 패키지의 테스트 커버리지가 100%인지 검증한다.
@@ -60,7 +60,7 @@ test-coverage:
 		echo "=== $$svc ==="; \
 		(cd $(CURDIR)/svc/$$svc && \
 			trap 'rm -f coverage.out' EXIT && \
-			go test -coverprofile=coverage.out ./internal/... 2>&1 | grep -v '\[no test files\]'; \
+			go test -tags unit -coverprofile=coverage.out ./internal/... 2>&1 | grep -v '\[no test files\]'; \
 			test $${PIPESTATUS[0]} -eq 0 && \
 			if [ ! -f coverage.out ]; then \
 				echo "❌ internal 패키지에 테스트 파일이 없습니다." && \
