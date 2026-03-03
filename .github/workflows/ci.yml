@@ -56,6 +56,28 @@ jobs:
       - name: Test
         run: NO_MISE=1 make test
 
+  test-e2e:
+    name: Test (e2e)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jdx/mise-action@v2
+        with:
+          install: true
+          cache: true
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-test-e2e-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: go-test-e2e-${{ runner.os }}-
+
+      - name: Test (e2e)
+        run: NO_MISE=1 make test-e2e
+
   build:
     name: Build
     runs-on: ubuntu-latest

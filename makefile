@@ -9,9 +9,10 @@
 #   make fmt [SVC=hello]    — 전체 포맷 (SVC 지정 시 해당 서비스만)
 #   make dev [SVC=hello]    — air로 서비스 개발 실행
 #   make docker-build [SVC=hello] [PLATFORM=linux/arm64] — 서비스 이미지 빌드 (SVC 지정 시 해당 서비스만)
+#   make test-e2e [SVC=hello] — e2e 테스트 실행
 #   make test-coverage [SVC=hello] — internal 패키지 테스트 커버리지 100% 검증
 #   make setup              — 개발 환경 초기 설정
-.PHONY: build test test-coverage lint fmt dev setup docker-build
+.PHONY: build test test-e2e test-coverage lint fmt dev setup docker-build
 
 # mise가 관리하는 도구(golangci-lint, nilaway 등)의 PATH를 보장한다.
 ifeq ($(NO_MISE),1)
@@ -47,6 +48,13 @@ test:
 	@dirs="$(if $(SVC),./svc/$(SVC),$$(awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work))"; \
 	for dir in $$dirs; do \
 			echo "=== $$dir ===" && (cd $(CURDIR)/$$dir && go test -tags unit ./... 2>&1 | grep -v '\[no test files\]'; test $${PIPESTATUS[0]} -eq 0) || exit 1; \
+	done
+
+# go.work에 등록된 모든 모듈의 e2e 테스트를 실행한다.
+test-e2e:
+	@dirs="$(if $(SVC),./svc/$(SVC),$$(awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work))"; \
+	for dir in $$dirs; do \
+			echo "=== $$dir ===" && (cd $(CURDIR)/$$dir && go test -tags e2e ./... 2>&1 | grep -v '\[no test files\]'; test $${PIPESTATUS[0]} -eq 0) || exit 1; \
 	done
 
 # svc/*/internal 패키지의 테스트 커버리지가 100%인지 검증한다.
