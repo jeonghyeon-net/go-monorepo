@@ -77,3 +77,25 @@ jobs:
 
       - name: Build
         run: NO_MISE=1 make build
+
+  test-coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jdx/mise-action@v2
+        with:
+          install: true
+          cache: true
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-coverage-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: go-coverage-${{ runner.os }}-
+
+      - name: Test Coverage (100% required for internal packages)
+        run: NO_MISE=1 make test-coverage

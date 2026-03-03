@@ -9,8 +9,9 @@
 #   make fmt [SVC=hello]    — 전체 포맷 (SVC 지정 시 해당 서비스만)
 #   make dev [SVC=hello]    — air로 서비스 개발 실행
 #   make docker-build [SVC=hello] [PLATFORM=linux/arm64] — 서비스 이미지 빌드 (SVC 지정 시 해당 서비스만)
+#   make test-coverage [SVC=hello] — internal 패키지 테스트 커버리지 100% 검증
 #   make setup              — 개발 환경 초기 설정
-.PHONY: build test lint fmt dev setup docker-build
+.PHONY: build test test-coverage lint fmt dev setup docker-build
 
 # mise가 관리하는 도구(golangci-lint, nilaway 등)의 PATH를 보장한다.
 ifeq ($(NO_MISE),1)
@@ -46,6 +47,33 @@ test:
 	@dirs="$(if $(SVC),./svc/$(SVC),$$(awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work))"; \
 	for dir in $$dirs; do \
 			echo "=== $$dir ===" && (cd $(CURDIR)/$$dir && go test ./... 2>&1 | grep -v '\[no test files\]'; test $${PIPESTATUS[0]} -eq 0) || exit 1; \
+	done
+
+# svc/*/internal 패키지의 테스트 커버리지가 100%인지 검증한다.
+# internal 패키지가 없는 서비스는 스킵한다.
+test-coverage:
+	@svcs="$(if $(SVC),$(SVC),$$(awk '/^[[:space:]]*\.\/svc\//{gsub(/^[[:space:]]+\.\/svc\//,""); print}' go.work))"; \
+	for svc in $$svcs; do \
+		if [ ! -d "$(CURDIR)/svc/$$svc/internal" ]; then \
+			continue; \
+		fi; \
+		echo "=== $$svc ==="; \
+		(cd $(CURDIR)/svc/$$svc && \
+			trap 'rm -f coverage.out' EXIT && \
+			go test -coverprofile=coverage.out ./internal/... 2>&1 | grep -v '\[no test files\]'; \
+			test $${PIPESTATUS[0]} -eq 0 && \
+			if [ ! -f coverage.out ]; then \
+				echo "❌ internal 패키지에 테스트 파일이 없습니다." && \
+				exit 1; \
+			fi && \
+			total=$$(go tool cover -func=coverage.out | grep '^total:' | awk '{print $$3}') && \
+			echo "커버리지: $$total" && \
+			if [ "$$total" != "100.0%" ]; then \
+				echo "❌ 커버리지가 100%에 미달합니다." && \
+				go tool cover -func=coverage.out | grep -v '100.0%' | grep -v '^total:' && \
+				exit 1; \
+			fi \
+		) || exit 1; \
 	done
 
 # go.work에 등록된 모든 모듈에 golangci-lint와 nilaway를 실행한다.
