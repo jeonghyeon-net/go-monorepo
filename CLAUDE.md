@@ -1,0 +1,3 @@
+- `make build | test | lint | fmt` — go.work 기준 전체 대상
+- `make svc-<target> SVC=<name>` — 특정 서비스 대상
+- 모듈 추가 시 go.work만 수정하면 Makefile에 자동 반영
