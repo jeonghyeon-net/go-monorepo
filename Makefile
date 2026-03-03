@@ -3,52 +3,40 @@
 # ─────────────────────────────────────────────────────────────────────────────
 #
 # 사용법:
-#   make build          — 전체 공유 패키지 + 서비스 빌드
-#   make test           — 전체 공유 패키지 + 서비스 테스트
-#   make lint           — 전체 린트 (golangci-lint + nilaway)
-#   make fmt            — 전체 포맷
-#   make pkg-build      — 공유 패키지만 빌드
-#   make pkg-test       — 공유 패키지만 테스트
+#   make build              — 전체 빌드 (go.work 기준)
+#   make test               — 전체 테스트
+#   make lint               — 전체 린트 (golangci-lint + nilaway)
+#   make fmt                — 전체 포맷
 #   make svc-build SVC=rest-api  — 특정 서비스만 빌드
-#   make setup          — 개발 환경 초기 설정
-.PHONY: build test lint fmt setup pkg-build pkg-test
-
-# ── 공유 패키지 모듈 경로 ──────────────────────────────────────────────────────
-
-# pkg/ 아래 독립 모듈로 관리되는 공유 패키지 목록이다.
-# 새 공유 패키지를 추가하면 여기에 경로를 추가한다.
-PKG_MODULES := pkg/archtest
+#   make setup              — 개발 환경 초기 설정
+.PHONY: build test lint fmt setup
 
 # ── 전체 대상 명령 ─────────────────────────────────────────────────────────────
 
-# 전체 서비스와 공유 패키지를 빌드한다.
+# go.work에 등록된 모든 모듈(공유 패키지 + 서비스)을 빌드한다.
+# go.work의 use 지시문에서 모듈 경로를 자동 추출한다.
 build:
-	@for dir in $(PKG_MODULES); do \
+	@awk '/use \.\//{print $$2}' go.work | while read dir; do \
 		cd $(CURDIR)/$$dir && go build ./...; \
 	done
-	@for dir in services/*/; do \
-		[ -f "$$dir/Makefile" ] && $(MAKE) -C "$$dir" build || true; \
-	done
 
-# 전체 서비스와 공유 패키지의 테스트를 실행한다.
+# go.work에 등록된 모든 모듈의 테스트를 실행한다.
 test:
-	@for dir in $(PKG_MODULES); do \
-		cd $(CURDIR)/$$dir && go test ./...; \
-	done
-	@for dir in services/*/; do \
-		[ -f "$$dir/Makefile" ] && $(MAKE) -C "$$dir" test || true; \
+	@awk '/use \.\//{print $$2}' go.work | while read dir; do \
+		cd $(CURDIR)/$$dir && go test ./... 2>&1 | { grep -v '\[no test files\]' || true; }; \
 	done
 
-# golangci-lint를 전체 workspace에 대해 실행한다.
-# nilaway도 전체에 대해 실행한다.
+# go.work에 등록된 모든 모듈에 golangci-lint와 nilaway를 실행한다.
 lint:
-	golangci-lint run ./...
-	nilaway ./...
+	@awk '/use \.\//{print $$2}' go.work | while read dir; do \
+		cd $(CURDIR)/$$dir && golangci-lint run ./... && nilaway ./...; \
+	done
 
-# 전체 서비스의 코드를 포맷한다.
+# go.work에 등록된 모든 모듈의 코드를 포맷한다.
 fmt:
-	gofmt -w .
-	golangci-lint fmt
+	@awk '/use \.\//{print $$2}' go.work | while read dir; do \
+		cd $(CURDIR)/$$dir && gofmt -w . && golangci-lint fmt; \
+	done
 
 # ── 특정 서비스 대상 명령 ─────────────────────────────────────────────────────
 
@@ -57,20 +45,6 @@ fmt:
 svc-%:
 	@if [ -z "$(SVC)" ]; then echo "SVC를 지정하세요. 예: make svc-build SVC=rest-api"; exit 1; fi
 	$(MAKE) -C services/$(SVC) $*
-
-# ── 공유 패키지 대상 명령 ──────────────────────────────────────────────────────
-
-# 공유 패키지만 빌드한다.
-pkg-build:
-	@for dir in $(PKG_MODULES); do \
-		cd $(CURDIR)/$$dir && go build ./...; \
-	done
-
-# 공유 패키지만 테스트한다.
-pkg-test:
-	@for dir in $(PKG_MODULES); do \
-		cd $(CURDIR)/$$dir && go test ./...; \
-	done
 
 # ── 프로젝트 초기 설정 ────────────────────────────────────────────────────────
 
