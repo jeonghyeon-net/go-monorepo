@@ -11,6 +11,9 @@
 #   make setup              — 개발 환경 초기 설정
 .PHONY: build test lint fmt setup
 
+# mise가 관리하는 도구(golangci-lint, nilaway 등)의 PATH를 보장한다.
+SHELL := mise exec -- bash
+
 # ── 전체 대상 명령 ─────────────────────────────────────────────────────────────
 
 # go.work에 등록된 모든 모듈(공유 패키지 + 서비스)을 빌드한다.
