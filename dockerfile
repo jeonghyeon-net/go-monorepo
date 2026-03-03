@@ -3,7 +3,7 @@ FROM golang:1.26-alpine AS build
 ARG SERVICE
 WORKDIR /src
 
-RUN apk add --no-cache make
+RUN apk add --no-cache make bash
 
 COPY svc/${SERVICE}/go.mod ./svc/${SERVICE}/go.mod
 RUN --mount=type=cache,target=/go/pkg/mod \
