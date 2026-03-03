@@ -1,0 +1,16 @@
+root = "."
+tmp_dir = ".air"
+
+[build]
+cmd = "svc=${SVC:-hello}; cd svc/$svc && go build -o ../../bin/dev ./cmd/"
+bin = "bin/dev"
+include_ext = ["go"]
+include_dir = ["svc", "pkg"]
+exclude_dir = ["bin", ".air", "tmp", "vendor", ".git", "docs"]
+exclude_regex = ["_test.go"]
+delay = 1000
+stop_on_error = true
+send_interrupt = true
+
+[misc]
+clean_on_exit = true

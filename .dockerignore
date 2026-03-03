@@ -1,0 +1,10 @@
+.git
+**/.git
+.DS_Store
+tmp/
+coverage.out
+coverage.html
+*.db
+data/
+.air.toml
+**/node_modules/
