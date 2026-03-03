@@ -1,18 +1,23 @@
+//go:build unit
+
 package greeter_test
 
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	"go.uber.org/goleak"
+
 	"go-monorepo/svc/hello/internal/greeter"
 )
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m)
+}
 
 func TestGreet(t *testing.T) {
 	t.Parallel()
 
 	got := greeter.Greet("world")
-	want := "hello, world!"
-
-	if got != want {
-		t.Errorf("Greet(\"world\") = %q, want %q", got, want)
-	}
+	require.Equal(t, "hello, world!", got)
 }
