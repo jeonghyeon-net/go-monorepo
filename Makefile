@@ -23,7 +23,7 @@ build:
 # go.work에 등록된 모든 모듈의 테스트를 실행한다.
 test:
 	@awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work | while read dir; do \
-		echo "=== $$dir ===" && cd $(CURDIR)/$$dir && go test ./...; \
+		echo "=== $$dir ===" && cd $(CURDIR)/$$dir && go test ./... 2>&1 | grep -v '\[no test files\]'; test $${PIPESTATUS[0]} -eq 0; \
 	done
 
 # go.work에 등록된 모든 모듈에 golangci-lint와 nilaway를 실행한다.
