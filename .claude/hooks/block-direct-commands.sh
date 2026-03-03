@@ -9,19 +9,24 @@ deny() {
   exit 0
 }
 
-case "$COMMAND" in
-  make*) ;; # make는 rewrite-make.sh에서 처리
-  *golangci-lint*) deny "golangci-lint" "make lint" ;;
-  *gofumpt*)       deny "gofumpt" "make fmt" ;;
-  *gofmt*)         deny "gofmt" "make fmt" ;;
-  *nilaway*)       deny "nilaway" "make lint" ;;
-  *"go build"*)  deny "go build" "make build" ;;
-  *"go test"*)   deny "go test" "make test" ;;
-  *"go run"*)    deny "go run" "make dev" ;;
-  *"go fmt"*)    deny "go fmt" "make fmt" ;;
-  *"docker buildx"*) deny "docker buildx" "make docker-build" ;;
-  *"docker build"*)  deny "docker build" "make docker-build" ;;
-esac
+# 복합 명령어를 개별 명령으로 분리하여 각각의 시작 부분만 검사
+# "cd foo && go build" → "cd foo", "go build" 각각 검사
+while IFS= read -r subcmd; do
+  trimmed="${subcmd#"${subcmd%%[![:space:]]*}"}"
+  case "$trimmed" in
+    make*) ;;
+    golangci-lint*)    deny "golangci-lint" "make lint" ;;
+    gofumpt*)          deny "gofumpt" "make fmt" ;;
+    gofmt*)            deny "gofmt" "make fmt" ;;
+    nilaway*)          deny "nilaway" "make lint" ;;
+    "go build"*)       deny "go build" "make build" ;;
+    "go test"*)        deny "go test" "make test" ;;
+    "go run"*)         deny "go run" "make dev" ;;
+    "go fmt"*)         deny "go fmt" "make fmt" ;;
+    "docker buildx"*)  deny "docker buildx" "make docker-build" ;;
+    "docker build"*)   deny "docker build" "make docker-build" ;;
+  esac
+done <<< "$(echo "$COMMAND" | tr '\n' ' ' | sed 's/&&/\n/g; s/||/\n/g; s/;/\n/g; s/|/\n/g')"
 
 echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}'
 exit 0
