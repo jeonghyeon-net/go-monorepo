@@ -1,0 +1,19 @@
+# 빌드 산출물
+tmp/
+
+# 환경 변수
+.env
+
+# 테스트 커버리지
+coverage.out
+coverage.html
+
+# SQLite DB
+*.db
+data/
+
+# OS
+.DS_Store
+
+# Air (핫 리로드)
+.air.toml
