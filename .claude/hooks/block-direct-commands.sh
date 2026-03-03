@@ -10,7 +10,6 @@ deny() {
 }
 
 case "$COMMAND" in
-  git*) ;;  # git 명령어는 검사 제외 (커밋 메시지 오탐 방지)
   make*) ;; # make는 rewrite-make.sh에서 처리
   *golangci-lint*) deny "golangci-lint" "make lint" ;;
   *gofumpt*)       deny "gofumpt" "make fmt" ;;
