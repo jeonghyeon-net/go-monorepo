@@ -91,3 +91,4 @@ docker-build:
 # mise install: .mise.toml에 정의된 도구들을 설치한다.
 setup:
 	mise install
+	git config core.hooksPath .githooks
