@@ -1,31 +1,8 @@
 #!/bin/bash
+# 빌드 도구 직접 실행을 차단한다. 반드시 make를 통해 실행해야 한다.
 
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command' 2>/dev/null)
-
-REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
-
-# make 명령은 항상 repo root에서 실행되도록 보정한다.
-# 서브디렉터리(svc/*)에 있으면 SVC를 자동 감지하여 추가한다.
-if [[ "$COMMAND" =~ ^make ]]; then
-  if [[ -n "$REPO_ROOT" && "$PWD" != "$REPO_ROOT" ]]; then
-    # svc/ 하위에 있고 SVC가 명시되지 않았으면 자동 감지
-    SVC_ARG=""
-    REL_PATH="${PWD#$REPO_ROOT/}"
-    if [[ "$REL_PATH" =~ ^svc/([^/]+) ]]; then
-      SVC_NAME="${BASH_REMATCH[1]}"
-      if [[ ! "$COMMAND" =~ SVC= ]]; then
-        SVC_ARG=" SVC=$SVC_NAME"
-      fi
-    fi
-    UPDATED=$(echo "$COMMAND" | sed "s|^make|make -C $REPO_ROOT|")
-    UPDATED="${UPDATED}${SVC_ARG}"
-    echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","updatedInput":{"command":"'"$UPDATED"'"}}}'
-  else
-    echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}'
-  fi
-  exit 0
-fi
 
 deny() {
   echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"'"$1"'을(를) 직접 실행하지 마세요. '"$2"'을(를) 사용하세요."}}'
@@ -33,6 +10,7 @@ deny() {
 }
 
 case "$COMMAND" in
+  make*) ;; # make는 rewrite-make.sh에서 처리
   *golangci-lint*) deny "golangci-lint" "make lint" ;;
   *gofumpt*)       deny "gofumpt" "make fmt" ;;
   *gofmt*)         deny "gofmt" "make fmt" ;;

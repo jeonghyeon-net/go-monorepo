@@ -8,6 +8,11 @@
             "type": "command",
             "command": ".claude/hooks/block-direct-commands.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/rewrite-make.sh",
+            "timeout": 10
           }
         ]
       }
