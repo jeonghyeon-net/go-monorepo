@@ -1,3 +1,4 @@
 - `make <build|test|lint|fmt|dev> [SVC=hello]` — SVC 생략 시 전체 대상
 - `make docker-build [SVC=hello] [PLATFORM=linux/arm64]` — 컨테이너 이미지 빌드
 - 모듈 추가 시 go.work만 수정하면 Makefile에 자동 반영
+- golangci-lint, gofmt, go build, go test 등을 직접 실행하지 않는다. 반드시 make를 통해 실행한다.
