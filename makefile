@@ -88,7 +88,7 @@ test-coverage:
 lint:
 	@dirs="$(if $(SVC),./svc/$(SVC),$$(awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work))"; \
 	for dir in $$dirs; do \
-			echo "=== $$dir ===" && (cd $(CURDIR)/$$dir && golangci-lint run -c $(CURDIR)/.golangci.yml --fix ./... && nilaway ./...) || exit 1; \
+			echo "=== $$dir ===" && (cd $(CURDIR)/$$dir && golangci-lint run -c $(CURDIR)/.golangci.yml --fix --build-tags "unit,e2e" ./... && nilaway -tags "unit,e2e" ./...) || exit 1; \
 	done
 
 # go.work에 등록된 모든 모듈의 코드를 포맷한다.
