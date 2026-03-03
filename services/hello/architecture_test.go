@@ -9,6 +9,8 @@ import (
 )
 
 func TestArchitecture(t *testing.T) {
+	t.Parallel()
+
 	_, f, _, _ := runtime.Caller(0)
 	archtest.RunAll(t, filepath.Dir(f))
 }

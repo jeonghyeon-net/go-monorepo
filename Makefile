@@ -16,25 +16,25 @@
 # go.work에 등록된 모든 모듈(공유 패키지 + 서비스)을 빌드한다.
 # go.work의 use 지시문에서 모듈 경로를 자동 추출한다.
 build:
-	@awk '/use \.\//{print $$2}' go.work | while read dir; do \
+	@awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work | while read dir; do \
 		cd $(CURDIR)/$$dir && go build ./...; \
 	done
 
 # go.work에 등록된 모든 모듈의 테스트를 실행한다.
 test:
-	@awk '/use \.\//{print $$2}' go.work | while read dir; do \
-		cd $(CURDIR)/$$dir && go test ./... 2>&1 | { grep -v '\[no test files\]' || true; }; \
+	@awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work | while read dir; do \
+		echo "=== $$dir ===" && cd $(CURDIR)/$$dir && go test ./...; \
 	done
 
 # go.work에 등록된 모든 모듈에 golangci-lint와 nilaway를 실행한다.
 lint:
-	@awk '/use \.\//{print $$2}' go.work | while read dir; do \
-		cd $(CURDIR)/$$dir && golangci-lint run ./... && nilaway ./...; \
+	@awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work | while read dir; do \
+		cd $(CURDIR)/$$dir && golangci-lint run --fix ./... && nilaway ./...; \
 	done
 
 # go.work에 등록된 모든 모듈의 코드를 포맷한다.
 fmt:
-	@awk '/use \.\//{print $$2}' go.work | while read dir; do \
+	@awk '/^[[:space:]]*\.\//{gsub(/^[[:space:]]+/,""); print}' go.work | while read dir; do \
 		cd $(CURDIR)/$$dir && gofmt -w . && golangci-lint fmt; \
 	done
 
