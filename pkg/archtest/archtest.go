@@ -1,13 +1,5 @@
 // Package archtest는 Go DDD 프로젝트의 아키텍처 규칙을 자동 검증하는 공유 라이브러리다.
 //
-// 모노레포의 각 서비스에서 이 패키지를 import하여 아키텍처 테스트를 실행한다.
-//
-// 사용법:
-//
-//	func TestArchitecture(t *testing.T) {
-//	    archtest.RunAll(t, projectRoot(t))
-//	}
-//
 // 6가지 규칙 카테고리를 검증한다:
 //   - Dependencies: import 방향이 DDD 레이어 규칙을 따르는지
 //   - Naming: 패키지명, 타입명이 컨벤션을 따르는지
@@ -27,23 +19,23 @@ import (
 )
 
 // RunAll은 주어진 프로젝트 루트에 대해 6가지 아키텍처 규칙을 모두 실행하고 결과를 보고한다.
+// ERROR 위반이 있으면 테스트 FAIL, WARNING만 있으면 PASS.
 //
-// projectRoot는 go.mod가 있는 디렉터리의 절대 경로다.
-// 각 규칙은 서브테스트로 실행되어 개별적으로 결과를 확인할 수 있다.
-//
-// 결과 처리:
-//   - ERROR 심각도 위반이 있으면 → 테스트 FAIL
-//   - WARNING만 있으면 → 테스트 PASS (로그에 경고만 출력)
-//   - 위반 없으면 → 테스트 PASS
-func RunAll(t *testing.T, projectRoot string) {
+// pathPrefix가 주어지면 위반 파일 경로 앞에 붙여서 모노레포 내 위치를 명확히 한다.
+// 예: RunAll(t, serviceRoot, "svc/hello") → file: svc/hello/internal/greeter
+func RunAll(t *testing.T, projectRoot string, pathPrefix ...string) {
 	t.Helper()
+
+	prefix := ""
+	if len(pathPrefix) > 0 {
+		prefix = pathPrefix[0]
+	}
 
 	cfg, err := ruleset.NewConfig(projectRoot)
 	if err != nil {
 		t.Fatalf("failed to create config: %v", err)
 	}
 
-	// internal/ 디렉터리 안의 모든 Go 파일을 파싱한다.
 	files, err := analyzer.ParseDirectory(filepath.Join(projectRoot, "internal"))
 	if err != nil {
 		t.Fatalf("failed to parse directory: %v", err)
@@ -53,36 +45,42 @@ func RunAll(t *testing.T, projectRoot string) {
 
 	t.Run("Dependencies", func(t *testing.T) {
 		vs := ruleset.CheckDependencies(files, cfg)
+		addPathContext(vs, projectRoot, prefix)
 		allViolations = append(allViolations, vs...)
 		reportViolations(t, vs)
 	})
 
 	t.Run("Naming", func(t *testing.T) {
 		vs := ruleset.CheckNaming(files, cfg)
+		addPathContext(vs, projectRoot, prefix)
 		allViolations = append(allViolations, vs...)
 		reportViolations(t, vs)
 	})
 
 	t.Run("InterfacePatterns", func(t *testing.T) {
 		vs := ruleset.CheckInterfacePatterns(files, cfg)
+		addPathContext(vs, projectRoot, prefix)
 		allViolations = append(allViolations, vs...)
 		reportViolations(t, vs)
 	})
 
 	t.Run("Structure", func(t *testing.T) {
 		vs := ruleset.CheckStructure(cfg)
+		addPathContext(vs, projectRoot, prefix)
 		allViolations = append(allViolations, vs...)
 		reportViolations(t, vs)
 	})
 
 	t.Run("Sqlc", func(t *testing.T) {
 		vs := ruleset.CheckSqlc(cfg)
+		addPathContext(vs, projectRoot, prefix)
 		allViolations = append(allViolations, vs...)
 		reportViolations(t, vs)
 	})
 
 	t.Run("Testing", func(t *testing.T) {
 		vs := ruleset.CheckTestingPatterns(cfg)
+		addPathContext(vs, projectRoot, prefix)
 		allViolations = append(allViolations, vs...)
 		reportViolations(t, vs)
 	})
@@ -91,6 +89,23 @@ func RunAll(t *testing.T, projectRoot string) {
 
 	if report.HasErrors(allViolations) {
 		t.Fatal("architecture violations with ERROR severity found")
+	}
+}
+
+// addPathContext는 위반 파일 경로를 정규화하고 prefix를 붙인다.
+// 절대 경로는 projectRoot 기준 상대 경로로 변환한 뒤, prefix를 앞에 붙인다.
+func addPathContext(violations []report.Violation, projectRoot, prefix string) {
+	for i := range violations {
+		file := violations[i].File
+		if filepath.IsAbs(file) {
+			if rel, err := filepath.Rel(projectRoot, file); err == nil {
+				file = rel
+			}
+		}
+		if prefix != "" {
+			file = filepath.Join(prefix, file)
+		}
+		violations[i].File = file
 	}
 }
 

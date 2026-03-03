@@ -35,7 +35,7 @@ func TestWorkspaceArchitecture(t *testing.T) {
 		foundServiceModule = true
 		t.Run(entry.Name(), func(t *testing.T) {
 			t.Parallel()
-			archtest.RunAll(t, serviceRoot)
+			archtest.RunAll(t, serviceRoot, filepath.Join("svc", entry.Name()))
 		})
 	}
 
