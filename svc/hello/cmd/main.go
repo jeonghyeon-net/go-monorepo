@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"go-monorepo/svc/hello/internal/greeter"
+)
 
 func main() {
-	fmt.Println("hello, world!")
+	fmt.Println(greeter.Greet("world"))
 }
